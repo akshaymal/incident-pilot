@@ -51,8 +51,8 @@ Every issue gets exactly one Type, one Priority, one Area label.
 
 Two rules from `CLAUDE.md` are easy to violate by accident and hard to catch in a normal review, so they're enforced mechanically instead of relying on memory:
 
-- **`scripts/check_mcp_boundary.py`** — fails if anything under `src/incident_pilot/agents/` imports `incident_pilot.mcp_servers` directly instead of calling it as a real MCP tool. Enforces the MCP-over-hardcoded-calls rule (stated in `CLAUDE.md`'s intro and restated under "What NOT to do": "don't collapse the MCP server layer into a plain function call").
-- **`scripts/check_synthetic_data.py`** — fails on hardcoded ticket/runbook/incident-shaped dict literals outside `scripts/seed_data.py`, or real-looking email domains/SSN patterns anywhere in the tree. Enforces Ground rule 2 ("all data is synthetic and must stay that way") and the "don't invent ticket/incident data inline in code" rule under "What NOT to do".
+- **`scripts/check_mcp_boundary.py`** — fails if anything under `src/incident_pilot/agents/` imports `incident_pilot.mcp_servers` directly instead of calling it as a real MCP tool. Enforces Ground rule 1 ("real MCP tool calls, never hardcoded imports").
+- **`scripts/check_synthetic_data.py`** — fails on hardcoded ticket/runbook/incident-shaped dict literals outside `scripts/seed_data.py`, or real-looking email domains/SSN patterns anywhere in the tree. Enforces Ground rule 3 ("all data is synthetic and must stay that way").
 
 Both are pure-stdlib Python — they run in CI and the pre-commit hook unconditionally, even before `pyproject.toml` exists, unlike the ruff/pytest steps. Both are heuristics, not proofs: they can false-positive on legitimate code that happens to match the pattern (e.g. a docstring mentioning `ticket_id`). A failure means "look closer," not necessarily "this is wrong" — if it's a false positive, say so in the PR rather than restructuring the code just to dodge the pattern. If the pattern itself is too broad, fix the pattern in the script rather than working around it silently.
 
