@@ -19,7 +19,7 @@ Use this skill when asked to "work on issue #N" or equivalent.
 
    A few rules for the implementation phase:
    - **One criterion at a time.** Work through the acceptance criteria sequentially, not all at once — it keeps commits focused and makes partial progress reviewable.
-   - **Ambiguity mid-implementation → stop and ask.** If an acceptance criterion turns out to be unclear or contradictory once you're in the code, stop and ask the user rather than making a judgment call that silently changes scope. This is preferable to finishing something the user didn't want.
+   - **Ambiguity mid-implementation → stop and ask.** If an acceptance criterion turns out to be unclear or contradictory once you're in the code, stop and ask the user rather than making a judgment call that silently changes scope. This is preferable to finishing something the user didn't want. **If the user's answer changes the AC** (adds, drops, or redefines a criterion from what the issue currently says), update the issue itself before continuing — same tool as `issue-refiner` (`gh issue edit <N>` locally, or `mcp__github__issue_write` in a remote session) — so the issue body matches what's actually being built. Do this at the point of the decision, not as cleanup later; otherwise the issue and the shipped PR silently diverge and nothing else in the workflow would catch it.
    - **Blocker hit → surface it immediately.** If you hit a technical blocker (a missing dependency, an API constraint, an environmental issue) that you cannot resolve, tell the user what it is and what options exist — don't silently work around it in a way that narrows what the implementation can do.
    - **Scope creep → resist it.** If you notice something adjacent that could be improved, note it for a separate issue rather than fixing it here. A bug fix doesn't need surrounding cleanup; a feature doesn't need extra polish.
 4. **Sync with base first.** Implementation (plus any back-and-forth on a tricky fix) can take long enough that `main` moves — a same-session branch going stale isn't a fluke, it's expected on anything nontrivial. Run `git fetch origin main`. If `origin/main` has commits the branch doesn't (`git log <branch>..origin/main` is non-empty), merge it in: `git merge origin/main` (never rebase or force-push — this may not be the only place work is happening, and a merge commit can't destroy anything). Resolve any conflicts. Doing this *before* self-verify means the verify pass below covers the code that will actually ship, instead of verifying a version of the branch that's about to be superseded — merging main in twice (once here, once again after review) is wasted work when once, at the right point, covers it.
@@ -57,8 +57,11 @@ Use this skill when asked to "work on issue #N" or equivalent.
    - **Any known risk areas** — files or components that have caused bugs before, or that other parts of the codebase depend on heavily (e.g., the LangGraph graph definition, MCP server tool signatures, the audit-log writer)
    - Instruct it to review for **correctness only**: logic bugs, missed edge cases, runtime misbehavior. Explicitly tell it to skip style, structure, and anything already enforced by ruff — that gate already ran.
    - Explicitly ask it to flag any ground-rule violation it notices in passing: a direct import from `mcp_servers/` instead of a real MCP call, non-synthetic data introduced outside `scripts/seed_data.py`, or a hosted/managed service substituted for a self-hosted one. These are easy to miss in a normal correctness review but are non-negotiable per `CLAUDE.md`.
+   - **Require it to verify AC coverage, item by item.** For each line in the acceptance criteria, it must state whether the diff satisfies it, partially satisfies it, or doesn't touch it at all — checking a box in the PR body is not evidence on its own. This is the actual verification step behind the AC checklist in step 9: the implementing session (this one) is not a credible judge of whether its own work meets its own criteria, so the checkmarks below come from this independent pass, not from self-assessment.
 
    Do not tell it what reasoning produced the changes or what you expected the implementation to look like — the value of the gate is the independent read.
+
+   **Unmet or partially-met AC → fix and re-run this step**, same as a correctness bug (see "Respond to findings by severity" below) — before opening the PR, not noted as a caveat in it.
 
    **Model selection:** Default to `claude-haiku-4-5-20251001` — the brief is structured and the mandate is narrow, which is exactly the case where a smaller model performs well at a fraction of the cost. Upgrade to `claude-sonnet-4-6` when the diff touches any of these high-blast-radius areas:
    - `src/incident_pilot/agents/` — the LangGraph graph definition, consumed by every downstream node
@@ -88,17 +91,20 @@ Use this skill when asked to "work on issue #N" or equivalent.
    ## Acceptance criteria
 
    <checklist copied from the issue, each item checked or explicitly left unchecked with a reason>
+   <the AC coverage verdict from step 6's review pass — not this session's own assessment>
 
    ## Verification
 
-   - [x] python3 scripts/check_synthetic_data.py
-   - [x] python3 scripts/check_mcp_boundary.py
-   - [x] uv run ruff check .
-   - [x] uv run ruff format --check .
-   - [x] uv run pytest
-   - [x] Independent code-review pass (see above)
-   - [x] Docs/artifacts checked for staleness against this change (see above)
+   - [x] python3 scripts/check_synthetic_data.py (CI-enforced)
+   - [x] python3 scripts/check_mcp_boundary.py (CI-enforced)
+   - [x] uv run ruff check . (CI-enforced)
+   - [x] uv run ruff format --check . (CI-enforced)
+   - [x] uv run pytest (CI-enforced)
+   - [x] Independent code-review pass, including AC coverage (self-reported — see above)
+   - [x] Docs/artifacts checked for staleness against this change (self-reported — see above)
    ```
+
+   The `(CI-enforced)` / `(self-reported)` tags matter: the first five items are re-run by CI on the same commit and will fail the build if untrue, so a reviewer can trust the checkbox on its own. The last two are this session's own claim about work a human can't re-run from the PR — call that out rather than let both kinds of checkbox look equally authoritative.
 
 10. **Report back** the PR URL and a one-line summary. Do not merge — merging is the user's call.
 
@@ -110,3 +116,4 @@ Use this skill when asked to "work on issue #N" or equivalent.
 - Never open a PR without first checking the branch is current with `origin/main` (step 8) — a PR opened against a stale base is a preventable, not occasional, failure mode.
 - If the acceptance criteria turn out to be wrong or incomplete once you're implementing, stop and ask the user rather than silently expanding or shrinking scope.
 - Never quietly widen an issue's Area/week scope — pulling forward later work is fine (week boundaries are guidance), but it should be visible in the PR description, not buried in the diff.
+- Never let the issue's AC text go stale after a user-approved scope change mid-implementation — update the issue itself (step 3), so the issue and the merged PR describe the same thing.
