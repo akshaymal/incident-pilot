@@ -15,9 +15,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 AGENTS_DIR = REPO_ROOT / "src" / "incident_pilot" / "agents"
 
-FORBIDDEN_IMPORT_PATTERN = re.compile(
-    r"^\s*(from|import)\s+incident_pilot\.mcp_servers\b"
-)
+FORBIDDEN_IMPORT_PATTERN = re.compile(r"^\s*(from|import)\s+incident_pilot\.mcp_servers\b")
 
 
 def main() -> int:
