@@ -2,9 +2,9 @@
 
 ## The problem
 
-Most GenAI agent demos stop at "the agent does the task." They skip the part that actually determines whether an organization can trust an agent with real work: can anyone say what data it touched, whether an action was approved, why it made a particular call, and whether that trail survives an audit? 2026 market research on enterprise AI agent adoption is consistent on this point — governance and observability gaps, not model capability, are the primary reason agent pilots stall before reaching production, and regulation (the EU AI Act's Article 12 automatic-logging requirement among them) is starting to make that trail a legal requirement, not just good practice.
+Most GenAI agent demos stop at "the agent does the task." They skip the part that actually determines whether an organization can trust an agent with real work: can anyone say what data it touched, whether an action was approved, why it made a particular call, and whether that trail survives an audit? 2026 market research on enterprise AI agent adoption is consistent on this point -- governance and observability gaps, not model capability, are the primary reason agent pilots stall before reaching production, and regulation (the EU AI Act's Article 12 automatic-logging requirement among them) is starting to make that trail a legal requirement, not just good practice. See [`docs/research/2026-08-genai-agent-market-research.md`](research/2026-08-genai-agent-market-research.md) for the full findings this claim (and everything else in this document) is drawn from.
 
-`incident-pilot` exists to build something the other way around: the governance and observability layer isn't bolted on at the end, it's the reason the project exists. The "agent" part — an IT ops/incident triage copilot — is the vehicle, not the point.
+`incident-pilot` exists to build something the other way around: the governance and observability layer isn't bolted on at the end, it's the reason the project exists. The "agent" part -- an IT ops/incident triage copilot -- is the vehicle, not the point.
 
 ## Why IT ops / incident triage as the domain
 
@@ -14,7 +14,7 @@ Most GenAI agent demos stop at "the agent does the task." They skip the part tha
 
 ## Why this project exists (the personal reason)
 
-This project is a deliberate, hands-on tour through the current (2026) GenAI agent ecosystem: orchestration frameworks, memory systems, agent-to-tool and agent-to-agent protocols, sandboxed execution, observability, and enterprise governance patterns. It was scoped after a broad market survey of the space (orchestration: LangGraph/CrewAI/Microsoft Agent Framework/etc.; memory: Mem0/Zep-Graphiti/Letta/OpenViking/etc.; protocols: MCP/A2A/AG-UI; sandboxes: E2B/Daytona/Modal; observability: Langfuse/LangSmith/Braintrust/etc.), specifically to identify which technologies were foundational enough to be worth real hands-on time rather than just reading about.
+This project is a deliberate, hands-on tour through the current (2026) GenAI agent ecosystem: orchestration frameworks, memory systems, agent-to-tool and agent-to-agent protocols, sandboxed execution, observability, and enterprise governance patterns. It was scoped after a broad market survey of the space (orchestration: LangGraph/CrewAI/Microsoft Agent Framework/etc.; memory: Mem0/Zep-Graphiti/Letta/OpenViking/etc.; protocols: MCP/A2A/AG-UI; sandboxes: E2B/Daytona/Modal; observability: Langfuse/LangSmith/Braintrust/etc.) -- the full report is preserved at [`docs/research/2026-08-genai-agent-market-research.md`](research/2026-08-genai-agent-market-research.md) -- specifically to identify which technologies were foundational enough to be worth real hands-on time rather than just reading about.
 
 **This is a learning project first, a product second.** Every technology choice below should be read with that in mind: where there's a choice between "the fastest way to make this work" and "the way that builds real understanding of the underlying concept," this project deliberately takes the second path. See `CLAUDE.md` for what that means concretely (e.g., always serving tools over MCP rather than importing them as plain functions, even when that's more work).
 
@@ -22,12 +22,12 @@ This project is a deliberate, hands-on tour through the current (2026) GenAI age
 
 These are the constraints the project was designed against, in priority order:
 
-1. **Cover the important layers of the modern agent stack** — orchestration, memory, tool/agent protocols, sandboxed execution, observability, governance — so the end result is a well-rounded foundation, not depth in one narrow slice.
-2. **Build a strong enough personal foundation to discuss GenAI agent architecture credibly with others** — informed by real implementation experience, not just reading.
-3. **Run as an ongoing project with a real weekly checkpoint** — something demoable and explainable at the end of each week, not a single all-or-nothing finish line. See `docs/checkpoints/`.
-4. **Solve a real (if synthetically-scoped) problem** — the IT ops/incident triage use case is a genuine enterprise pattern, not an arbitrary toy.
-5. **All data is synthetic, generated by the project itself** — there is no existing dataset to work from, and using real company or personal data isn't appropriate for a public repo.
-6. **Anyone should be able to set this up and run it themselves** — no dependency on the maintainer's personal cloud accounts, credentials, or local environment quirks. `git clone` + `uv sync` + `docker compose up` + a seed script should be the entire setup story.
+1. **Cover the important layers of the modern agent stack** -- orchestration, memory, tool/agent protocols, sandboxed execution, observability, governance -- so the end result is a well-rounded foundation, not depth in one narrow slice.
+2. **Build a strong enough personal foundation to discuss GenAI agent architecture credibly with others** -- informed by real implementation experience, not just reading.
+3. **Run as an ongoing project with a real weekly checkpoint** -- something demoable and explainable at the end of each week, not a single all-or-nothing finish line. See `docs/checkpoints/`.
+4. **Solve a real (if synthetically-scoped) problem** -- the IT ops/incident triage use case is a genuine enterprise pattern, not an arbitrary toy.
+5. **All data is synthetic, generated by the project itself** -- there is no existing dataset to work from, and using real company or personal data isn't appropriate for a public repo.
+6. **Anyone should be able to set this up and run it themselves** -- no dependency on the maintainer's personal cloud accounts, credentials, or local environment quirks. `git clone` + `uv sync` + `docker compose up` + a seed script should be the entire setup story.
 
 ## Non-goals
 
@@ -37,6 +37,7 @@ These are the constraints the project was designed against, in priority order:
 
 ## Where to go next
 
-- **`docs/architecture.md`** — how the system is put together and why each technology was chosen
-- **`docs/checkpoints/README.md`** — the weekly roadmap and current status
-- **`CLAUDE.md`** — operating conventions for anyone (human or agent) working on the code
+- **[`docs/research/2026-08-genai-agent-market-research.md`](research/2026-08-genai-agent-market-research.md)** -- the market research this whole project is scoped from
+- **`docs/architecture.md`** -- how the system is put together and why each technology was chosen
+- **`docs/checkpoints/README.md`** -- the weekly roadmap and current status
+- **`CLAUDE.md`** -- operating conventions for anyone (human or agent) working on the code

@@ -10,6 +10,7 @@ An AI-powered IT operations & incident triage copilot, built as a hands-on tour 
 - **Want the technical design?** [`docs/architecture.md`](docs/architecture.md) covers the full system and the reasoning behind every technology choice.
 - **Building it (human or Claude Code)?** [`CLAUDE.md`](CLAUDE.md) has the operating conventions, repo layout, and definition of done.
 - **What's being built when?** [`docs/checkpoints/`](docs/checkpoints/README.md) is the weekly roadmap and current status.
+- **Curious about the market research behind this?** [`docs/research/`](docs/research/2026-08-genai-agent-market-research.md) has the full findings this project was scoped from.
 
 ## What this is
 
