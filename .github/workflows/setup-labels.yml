@@ -1,0 +1,22 @@
+name: Setup labels
+
+on:
+  workflow_dispatch:
+
+permissions:
+  issues: write  # required to create/update labels
+
+jobs:
+  setup-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - run: python3 scripts/setup_labels.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPO: ${{ github.event.repository.name }}
