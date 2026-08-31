@@ -22,6 +22,8 @@ An AI IT-ops/incident triage copilot, built specifically to give the maintainer 
 4. **Audit-mindedness from day one.** Even in Week 1, before there's a formal audit-log table, log agent decisions (classification, tool calls, reasoning) somewhere inspectable -- this habit is the point of the whole project, not a Week 4 add-on.
 5. **When a task is ambiguous, prefer the choice that's more educational to implement**, and note the alternative briefly in a comment or the PR description.
 
+Ground rule 2 (synthetic data only) and the MCP-over-hardcoded-calls rule above (also restated under "What NOT to do" below) are checked mechanically in CI and the pre-commit hook via `scripts/check_synthetic_data.py` and `scripts/check_mcp_boundary.py` — see `docs/WORKFLOW.md`'s "Ground-rule guard scripts" section. They're heuristics, not proof of compliance; the rules still apply in full even where the scripts can't catch a violation.
+
 ## Tech stack & conventions
 
 - **Language:** Python 3.12+, managed with `uv` (not pip/poetry -- keep `uv.lock` committed)
@@ -56,7 +58,7 @@ All planned work — features, chores, bugs — is tracked as a GitHub Issue, no
 1. Issues get filed at any level of roughness.
 2. The `issue-refiner` skill turns a rough issue into `agent-ready` (unambiguous acceptance criteria, one Type/Priority/Area label each).
 3. Say "work on issue #N" to start — the `work-issue` skill branches, implements, self-verifies, gets an independent code-review pass, and opens a PR.
-4. **Never push directly to `main`.** All changes land via PR, and CI (ruff lint, ruff format, pytest) must pass.
+4. **Never push directly to `main`.** All changes land via PR, and CI (synthetic-data guard, MCP-boundary check, ruff lint, ruff format, pytest) must pass.
 
 **Issue creation rule:** Never create a GitHub issue directly via the API or MCP tools. Always invoke the `issue-refiner` skill instead — it enforces the required Type/Priority/Area labels and acceptance criteria before the issue is filed. The `.github/ISSUE_TEMPLATE/task.yml` form (used by the GitHub web UI) and the `issue-refiner` skill are the only two sanctioned paths for creating issues.
 

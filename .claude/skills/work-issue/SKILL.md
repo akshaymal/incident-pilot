@@ -26,10 +26,14 @@ Use this skill when asked to "work on issue #N" or equivalent.
 5. **Self-verify** before review. Run all of the following in order. Fix any failures before proceeding.
 
    ```
+   python3 scripts/check_synthetic_data.py
+   python3 scripts/check_mcp_boundary.py
    uv run ruff check .
    uv run ruff format --check .
    uv run pytest
    ```
+
+   The first two run regardless of whether `pyproject.toml` exists — they're pure-stdlib heuristic guards for Ground rules 1 and 2 (`CLAUDE.md`): the MCP-boundary check fails if anything under `src/incident_pilot/agents/` imports `incident_pilot.mcp_servers` directly instead of calling it as a real MCP tool; the synthetic-data guard fails on hardcoded ticket/runbook/incident-shaped literals outside `scripts/seed_data.py`, or real-looking email domains/SSN patterns anywhere. Both are heuristics, not proofs — a failure is a strong signal to look closer, not necessarily a hard violation; if it's a false positive, say so in the PR rather than silently reshaping the code to dodge the pattern.
 
    If the issue touches Docker Compose services (Langfuse, Neo4j, Postgres), also confirm `docker compose up -d` brings the stack up healthy and, if the change affects the seed data or CLI entry point, run `uv run python scripts/seed_data.py` and the relevant CLI command end-to-end once.
 
@@ -44,7 +48,7 @@ Use this skill when asked to "work on issue #N" or equivalent.
 
    Apply the same pattern — log to file, grep for failure markers on non-zero exit, `tail` only as a last-resort fallback if grep finds nothing — to every command above.
 
-   **If no `pyproject.toml` exists yet** (pre-Week-1 scaffold), these commands don't apply — say so and skip straight to step 6.
+   **If no `pyproject.toml` exists yet** (pre-Week-1 scaffold), the ruff/pytest commands don't apply — run the two guard scripts anyway, then say so and skip straight to step 6.
 6. **Independent review gate.** Dispatch a fresh subagent (not a fork — no shared context with this session) with the `code-review` skill. Give it a structured brief — not just the raw diff — so it spends tokens on the actual review rather than re-deriving context from scratch:
 
    - **Which files changed** (`git diff main...HEAD --name-only`)
@@ -87,6 +91,8 @@ Use this skill when asked to "work on issue #N" or equivalent.
 
    ## Verification
 
+   - [x] python3 scripts/check_synthetic_data.py
+   - [x] python3 scripts/check_mcp_boundary.py
    - [x] uv run ruff check .
    - [x] uv run ruff format --check .
    - [x] uv run pytest

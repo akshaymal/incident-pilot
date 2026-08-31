@@ -10,6 +10,8 @@ Closes #
 
 ## Verification
 
+- [ ] `python3 scripts/check_synthetic_data.py` passes
+- [ ] `python3 scripts/check_mcp_boundary.py` passes
 - [ ] `uv run ruff check .` passes
 - [ ] `uv run ruff format --check .` passes
 - [ ] `uv run pytest` passes

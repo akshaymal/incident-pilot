@@ -12,6 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Synthetic-data guard
+        run: python3 scripts/check_synthetic_data.py
+
+      - name: MCP-boundary check
+        run: python3 scripts/check_mcp_boundary.py
+
       - name: Check for Python project scaffold
         id: scaffold
         run: |

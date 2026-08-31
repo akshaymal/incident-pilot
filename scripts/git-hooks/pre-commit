@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+echo "Running pre-commit checks (synthetic-data guard + MCP-boundary check)..."
+
+python3 scripts/check_synthetic_data.py
+python3 scripts/check_mcp_boundary.py
+
 if [ ! -f pyproject.toml ]; then
-  echo "No pyproject.toml yet — skipping pre-commit checks."
+  echo "No pyproject.toml yet — skipping ruff/pytest checks."
   exit 0
 fi
 

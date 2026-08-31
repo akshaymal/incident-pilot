@@ -40,12 +40,21 @@ Every issue gets exactly one Type, one Priority, one Area label.
    - Verifies `agent-ready` is set (refuses to proceed otherwise).
    - Branches as `issue-<N>-<short-slug>` off up-to-date `main`.
    - Implements against the acceptance criteria, following `CLAUDE.md`'s ground rules.
-   - Self-verifies: `uv run ruff check .`, `uv run ruff format --check .`, `uv run pytest` (a no-op until the Week 1 Python scaffold exists — see "Pre-scaffold state" below).
+   - Self-verifies: the synthetic-data guard and MCP-boundary check (always), then `uv run ruff check .`, `uv run ruff format --check .`, `uv run pytest` (a no-op until the Week 1 Python scaffold exists — see "Pre-scaffold state" below).
    - Dispatches a **fresh, context-free subagent** to run the `code-review` skill against the diff — independent scrutiny with no exposure to the implementation reasoning, and explicitly asked to flag ground-rule violations (a hardcoded MCP import, non-synthetic data, a managed service swapped in for a self-hosted one) alongside ordinary correctness bugs.
    - Checks docs/artifacts (`README.md`, this file, the current week's checkpoint spec) against what the change actually touches: updates anything now stale, checks off completed spec items, or writes a new doc if the change introduces something that doesn't fit an existing doc's purpose. No-op if nothing changed that any doc describes.
    - Opens a PR: `Closes #N`, acceptance criteria restated as a checklist, verification checklist included.
-4. **CI runs** (`.github/workflows/ci.yml`): ruff lint, ruff format check, and pytest (all blocking, once the Python scaffold exists — see below).
+4. **CI runs** (`.github/workflows/ci.yml`): the synthetic-data guard and MCP-boundary check (always), then ruff lint, ruff format check, and pytest (once the Python scaffold exists — see below). All blocking.
 5. **You review and merge.** No autonomous merges, ever — branch protection enforces this at the repo level, not just by convention.
+
+## Ground-rule guard scripts
+
+Two rules from `CLAUDE.md` are easy to violate by accident and hard to catch in a normal review, so they're enforced mechanically instead of relying on memory:
+
+- **`scripts/check_mcp_boundary.py`** — fails if anything under `src/incident_pilot/agents/` imports `incident_pilot.mcp_servers` directly instead of calling it as a real MCP tool. Enforces the MCP-over-hardcoded-calls rule (stated in `CLAUDE.md`'s intro and restated under "What NOT to do": "don't collapse the MCP server layer into a plain function call").
+- **`scripts/check_synthetic_data.py`** — fails on hardcoded ticket/runbook/incident-shaped dict literals outside `scripts/seed_data.py`, or real-looking email domains/SSN patterns anywhere in the tree. Enforces Ground rule 2 ("all data is synthetic and must stay that way") and the "don't invent ticket/incident data inline in code" rule under "What NOT to do".
+
+Both are pure-stdlib Python — they run in CI and the pre-commit hook unconditionally, even before `pyproject.toml` exists, unlike the ruff/pytest steps. Both are heuristics, not proofs: they can false-positive on legitimate code that happens to match the pattern (e.g. a docstring mentioning `ticket_id`). A failure means "look closer," not necessarily "this is wrong" — if it's a false positive, say so in the PR rather than restructuring the code just to dodge the pattern. If the pattern itself is too broad, fix the pattern in the script rather than working around it silently.
 
 ## Checkpoint scope is guidance, not a hard gate
 
