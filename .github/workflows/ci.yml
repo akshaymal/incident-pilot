@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      # Clone the PR/push commit so the steps below have something to check.
+      - uses: actions/checkout@v4
+
+      # Ground rule 1 (CLAUDE.md): fails if src/incident_pilot/agents/ imports
+      # incident_pilot.mcp_servers directly instead of calling it as a real MCP
+      # tool. Pure stdlib, so it runs even before pyproject.toml exists.
+      - name: Synthetic-data guard
+        run: python3 scripts/check_synthetic_data.py
+
+      # Ground rule 3 (CLAUDE.md): fails on hardcoded ticket/runbook/incident-shaped
+      # literals outside scripts/seed_data.py, or real-looking email/SSN patterns.
+      # Also pure stdlib — runs unconditionally, same as the guard above.
+      - name: MCP-boundary check
+        run: python3 scripts/check_mcp_boundary.py
+
+      # The repo has no pyproject.toml until Week 1's scaffolding task lands.
+      # Detect that here so the uv/ruff/pytest steps below can no-op instead of
+      # failing the whole workflow on a repo that isn't runnable yet.
+      - name: Check for Python project scaffold
+        id: scaffold
+        run: |
+          if [ -f pyproject.toml ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No pyproject.toml yet (pre-Week-1 scaffold) — skipping verify steps until it exists."
+          fi
+
+      # Installs uv itself and caches its download/venv cache between runs.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        if: steps.scaffold.outputs.present == 'true'
+        with:
+          enable-cache: true
+
+      # Installs project + dev dependencies from uv.lock (source of truth, not
+      # regenerated here) so the steps below run against exactly what's committed.
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+        if: steps.scaffold.outputs.present == 'true'
+
+      # Static lint (unused imports, common bug patterns, style rules).
+      - name: Lint (ruff check)
+        run: uv run ruff check .
+        if: steps.scaffold.outputs.present == 'true'
+
+      # Formatting check only — fails if code isn't already `ruff format`-ed,
+      # doesn't rewrite files (that's a local/pre-commit concern, not CI's).
+      - name: Format check (ruff format)
+        run: uv run ruff format --check .
+        if: steps.scaffold.outputs.present == 'true'
+
+      # Full test suite (tests/, mirrors src/incident_pilot/ structure).
+      - name: Run tests (pytest)
+        run: uv run pytest
+        if: steps.scaffold.outputs.present == 'true'

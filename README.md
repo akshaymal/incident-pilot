@@ -79,12 +79,17 @@ uv run python -m incident_pilot.run  # starts the agent
 
 *(Exact commands will be finalized as Week 1 is implemented -- this is the intended shape.)*
 
+## Development workflow
+
+Work is tracked as GitHub Issues and implemented via Claude Code skills (`issue-refiner`, `work-issue`). All changes land via PR — CI runs ruff lint, ruff format check, and pytest. See `CLAUDE.md` for the summary and [`docs/WORKFLOW.md`](docs/WORKFLOW.md) for the full reference.
+
 ## Further reading
 
 - [`docs/motivation.md`](docs/motivation.md) -- the full problem statement, guiding priorities, and explicit non-goals
 - [`docs/architecture.md`](docs/architecture.md) -- system design, data flow, and the rationale behind every technology choice
 - [`docs/checkpoints/`](docs/checkpoints/README.md) -- the weekly build plan and current status
 - [`docs/research/`](docs/research/2026-08-genai-agent-market-research.md) -- the market research this project was scoped from
+- [`docs/WORKFLOW.md`](docs/WORKFLOW.md) -- the issue-driven development process (label taxonomy, the `issue-refiner`/`work-issue` lifecycle, CI gates)
 - [`CLAUDE.md`](CLAUDE.md) -- operating conventions for anyone (human or agent) building this
 
 ## License
