@@ -1,0 +1,106 @@
+---
+name: work-issue
+description: Implement a GitHub issue that has been marked agent-ready — branch, implement against its acceptance criteria, get an independent code-review pass, and open a PR. Use when asked to work on, pick up, or implement a specific issue number.
+---
+
+# Work Issue
+
+Use this skill when asked to "work on issue #N" or equivalent.
+
+## Process
+
+1. **Fetch and verify.** Read the issue using whichever tool is available in this session:
+   - **Local session** (`gh` available): `gh issue view <N> --json title,body,labels,state`
+   - **Remote session** (`gh` not available): use the `mcp__github__issue_read` tool with `owner: akshaymal`, `repo: incident-pilot`, `issue_number: <N>`
+
+   If the issue isn't open, stop and tell the user. If it does not have the `agent-ready` label, stop and tell the user to run the `issue-refiner` skill on it first — do not attempt to infer missing scope yourself.
+2. **Branch.** From an up-to-date `main`: `git checkout main && git pull && git checkout -b issue-<N>-<short-slug>`, where `<short-slug>` is a kebab-case summary of the issue title.
+3. **Implement** against the acceptance criteria in the issue body. Follow `CLAUDE.md`'s ground rules — stay inside the current week's scope unless the issue deliberately pulls forward later work (week boundaries here are guidance, not a hard gate, but silent scope drift isn't); keep all data synthetic and routed through `scripts/seed_data.py`; expose tools over MCP rather than importing them directly; log agent decisions somewhere inspectable even before the formal audit table exists; prefer the more educational implementation when a choice is ambiguous, and say so. Make focused commits, each referencing the issue: `git commit -m "<summary> (#<N>)"`.
+
+   A few rules for the implementation phase:
+   - **One criterion at a time.** Work through the acceptance criteria sequentially, not all at once — it keeps commits focused and makes partial progress reviewable.
+   - **Ambiguity mid-implementation → stop and ask.** If an acceptance criterion turns out to be unclear or contradictory once you're in the code, stop and ask the user rather than making a judgment call that silently changes scope. This is preferable to finishing something the user didn't want.
+   - **Blocker hit → surface it immediately.** If you hit a technical blocker (a missing dependency, an API constraint, an environmental issue) that you cannot resolve, tell the user what it is and what options exist — don't silently work around it in a way that narrows what the implementation can do.
+   - **Scope creep → resist it.** If you notice something adjacent that could be improved, note it for a separate issue rather than fixing it here. A bug fix doesn't need surrounding cleanup; a feature doesn't need extra polish.
+4. **Sync with base first.** Implementation (plus any back-and-forth on a tricky fix) can take long enough that `main` moves — a same-session branch going stale isn't a fluke, it's expected on anything nontrivial. Run `git fetch origin main`. If `origin/main` has commits the branch doesn't (`git log <branch>..origin/main` is non-empty), merge it in: `git merge origin/main` (never rebase or force-push — this may not be the only place work is happening, and a merge commit can't destroy anything). Resolve any conflicts. Doing this *before* self-verify means the verify pass below covers the code that will actually ship, instead of verifying a version of the branch that's about to be superseded — merging main in twice (once here, once again after review) is wasted work when once, at the right point, covers it.
+5. **Self-verify** before review. Run all of the following in order. Fix any failures before proceeding.
+
+   ```
+   uv run ruff check .
+   uv run ruff format --check .
+   uv run pytest
+   ```
+
+   If the issue touches Docker Compose services (Langfuse, Neo4j, Postgres), also confirm `docker compose up -d` brings the stack up healthy and, if the change affects the seed data or CLI entry point, run `uv run python scripts/seed_data.py` and the relevant CLI command end-to-end once.
+
+   Capture each command's output to a log file rather than letting it flood the conversation — most runs pass, and there's no reason to carry hundreds of lines of routine test output through the rest of the session. On failure, grep the log for the tool's actual failure markers with a little context:
+
+   ```bash
+   uv run pytest > /tmp/pytest.log 2>&1
+   if [ $? -ne 0 ]; then
+     grep -n -iE "error|failed|FAILED" /tmp/pytest.log -A 5 -B 2 || tail -100 /tmp/pytest.log
+   fi
+   ```
+
+   Apply the same pattern — log to file, grep for failure markers on non-zero exit, `tail` only as a last-resort fallback if grep finds nothing — to every command above.
+
+   **If no `pyproject.toml` exists yet** (pre-Week-1 scaffold), these commands don't apply — say so and skip straight to step 6.
+6. **Independent review gate.** Dispatch a fresh subagent (not a fork — no shared context with this session) with the `code-review` skill. Give it a structured brief — not just the raw diff — so it spends tokens on the actual review rather than re-deriving context from scratch:
+
+   - **Which files changed** (`git diff main...HEAD --name-only`)
+   - **The acceptance criteria** from the issue, verbatim
+   - **The diff itself** (`git diff main...HEAD`)
+   - **Any known risk areas** — files or components that have caused bugs before, or that other parts of the codebase depend on heavily (e.g., the LangGraph graph definition, MCP server tool signatures, the audit-log writer)
+   - Instruct it to review for **correctness only**: logic bugs, missed edge cases, runtime misbehavior. Explicitly tell it to skip style, structure, and anything already enforced by ruff — that gate already ran.
+   - Explicitly ask it to flag any ground-rule violation it notices in passing: a direct import from `mcp_servers/` instead of a real MCP call, non-synthetic data introduced outside `scripts/seed_data.py`, or a hosted/managed service substituted for a self-hosted one. These are easy to miss in a normal correctness review but are non-negotiable per `CLAUDE.md`.
+
+   Do not tell it what reasoning produced the changes or what you expected the implementation to look like — the value of the gate is the independent read.
+
+   **Model selection:** Default to `claude-haiku-4-5-20251001` — the brief is structured and the mandate is narrow, which is exactly the case where a smaller model performs well at a fraction of the cost. Upgrade to `claude-sonnet-4-6` when the diff touches any of these high-blast-radius areas:
+   - `src/incident_pilot/agents/` — the LangGraph graph definition, consumed by every downstream node
+   - `src/incident_pilot/mcp_servers/` — the tool-protocol boundary; a bug here is invisible to callers until runtime
+   - `src/incident_pilot/audit/` — compliance-critical by design; a silent logging gap defeats the point of the project
+   - CI config (`.github/workflows/`) or harness scripts (`scripts/`) — failures here block all future work
+   - `docker-compose.yml` — affects whether the whole stack is reproducible for a stranger
+
+   **Respond to findings by severity, not uniformly:**
+   - **Correctness bug** (wrong logic, missed edge case, data loss risk) or **ground-rule violation**: fix it, then re-run this step — the fix itself might introduce something new.
+   - **Nit or low-confidence finding** (rename, minor null-check, stylistic): apply it in place and continue — no re-run needed for changes this small.
+7. **Docs & artifacts check.** Read `docs/checkpoints/README.md`'s scope table and, if it exists, the current week's `docs/checkpoints/week-NN-*.md` — the "Definition of done" and "Carried forward" sections in particular. For `README.md` and `docs/WORKFLOW.md` (both short), read them directly if the change touches harness, workflow, or scripts; skip otherwise.
+   - If an existing doc now describes something inaccurately, update it in this PR — don't leave known drift for a future pass.
+   - If the week's spec has a checkbox this issue completes, check it off.
+   - If the change introduces something that needs documentation but doesn't fit any existing doc's purpose (e.g. a new subsystem), write a new doc rather than overloading an unrelated one.
+   - If nothing changed that any doc describes, no action needed — don't manufacture doc edits for their own sake.
+8. **Re-check base before opening the PR.** Review rounds (steps 6-7) can themselves take long enough for `main` to move again. Run `git fetch origin main` and check `git log <branch>..origin/main`. If it's empty, the merge from step 4 still covers what's shipping — go straight to step 9. If it's non-empty, merge it in (same approach as step 4, resolve any conflicts) and re-run *only* step 5 (self-verify) against the newly-merged result — a clean merge can still combine into something that no longer passes tests, and the merged-in commits weren't covered by this issue's own review round. Push, *then* open the PR. This step should be a no-op most of the time; it only does real work when main moved again during review.
+9. **Open the PR.** Use whichever tool is available in this session:
+   - **Local session** (`gh` available): `gh pr create --title "<summary> (#<N>)" --body "<body>"`
+   - **Remote session** (`gh` not available): use the `mcp__github__create_pull_request` tool with `owner: akshaymal`, `repo: incident-pilot`, `head: <branch>`, `base: main`, `title`, and `body`
+
+   Body:
+
+   ```
+   Closes #<N>
+
+   ## Acceptance criteria
+
+   <checklist copied from the issue, each item checked or explicitly left unchecked with a reason>
+
+   ## Verification
+
+   - [x] uv run ruff check .
+   - [x] uv run ruff format --check .
+   - [x] uv run pytest
+   - [x] Independent code-review pass (see above)
+   - [x] Docs/artifacts checked for staleness against this change (see above)
+   ```
+
+10. **Report back** the PR URL and a one-line summary. Do not merge — merging is the user's call.
+
+## Guardrails
+
+- Never push directly to `main`.
+- Never skip the independent review gate, even for small changes.
+- Never skip the docs & artifacts check, even when the answer is "nothing to update."
+- Never open a PR without first checking the branch is current with `origin/main` (step 8) — a PR opened against a stale base is a preventable, not occasional, failure mode.
+- If the acceptance criteria turn out to be wrong or incomplete once you're implementing, stop and ask the user rather than silently expanding or shrinking scope.
+- Never quietly widen an issue's Area/week scope — pulling forward later work is fine (week boundaries are guidance), but it should be visible in the PR description, not buried in the diff.

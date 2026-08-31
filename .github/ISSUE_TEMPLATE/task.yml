@@ -1,0 +1,69 @@
+name: Task
+description: A unit of work for this project (feature, chore, or bug)
+title: "[TYPE] <short summary>"
+labels: []
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - feature
+        - chore
+        - bug
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P1
+        - P2
+        - P3
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which layer of the stack this touches — see the repo layout in CLAUDE.md.
+      options:
+        - agent
+        - mcp
+        - memory
+        - sandbox
+        - observability
+        - audit
+        - ui
+        - infra
+        - docs
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description / context
+      description: What needs to happen and why.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checklist of conditions that must be true for this to be done.
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of done
+      value: |
+        - [ ] `uv run pytest` passes
+        - [ ] `uv run ruff check .` and `uv run ruff format --check .` pass
+        - [ ] Docs updated if applicable
+    validations:
+      required: true

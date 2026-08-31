@@ -49,6 +49,32 @@ An AI IT-ops/incident triage copilot, built specifically to give the maintainer 
   docs/checkpoints/    # Weekly specs -- the source of truth for scope
   ```
 
+## Workflow: issues drive the work
+
+All planned work — features, chores, bugs — is tracked as a GitHub Issue, not a TODO file. Full detail in `docs/WORKFLOW.md`; summary:
+
+1. Issues get filed at any level of roughness.
+2. The `issue-refiner` skill turns a rough issue into `agent-ready` (unambiguous acceptance criteria, one Type/Priority/Area label each).
+3. Say "work on issue #N" to start — the `work-issue` skill branches, implements, self-verifies, gets an independent code-review pass, and opens a PR.
+4. **Never push directly to `main`.** All changes land via PR, and CI (ruff lint, ruff format, pytest) must pass.
+
+**Issue creation rule:** Never create a GitHub issue directly via the API or MCP tools. Always invoke the `issue-refiner` skill instead — it enforces the required Type/Priority/Area labels and acceptance criteria before the issue is filed. The `.github/ISSUE_TEMPLATE/task.yml` form (used by the GitHub web UI) and the `issue-refiner` skill are the only two sanctioned paths for creating issues.
+
+**Checkpoint scope is guidance, not a hard gate.** It's fine to start Week 2 work early if Week 1's definition of done is fully met, or to pull forward a later week's item when it's genuinely ready. What isn't fine is scope drift that isn't visible — see `docs/WORKFLOW.md`'s "Checkpoint scope is guidance, not a hard gate" section.
+
+**Spec-scoped work exception:** work that doesn't have a concrete `week-NN-*.md` spec yet (or research that hasn't turned into a task) does not get filed as a GitHub issue — log it in `docs/checkpoints/README.md`'s scope preview or `docs/research/` instead, since it isn't actionable yet. See `docs/WORKFLOW.md`'s "Spec-scoped work" section.
+
+## One-time local setup
+
+- `git config core.hooksPath scripts/git-hooks` — enables the pre-commit ruff lint/format gate (no-ops until the Week 1 Python scaffold exists).
+- `gh auth login` — required before any skill that creates/reads issues or PRs (`issue-refiner`, `work-issue`).
+
+## Branch/commit/PR conventions
+
+- Branch: `issue-<N>-<short-slug>`
+- Commits reference the issue: `<summary> (#<N>)`
+- PRs: `Closes #<N>`, body restates acceptance criteria as a checklist, plus a verification checklist (ruff/pytest/independent review)
+
 ## Definition of done (applies every week, not just Week 1)
 
 Before considering any week's checkpoint complete:

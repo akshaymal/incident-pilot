@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ ! -f pyproject.toml ]; then
+  echo "No pyproject.toml yet — skipping pre-commit checks."
+  exit 0
+fi
+
+echo "Running pre-commit checks (ruff check + format)..."
+
+uv run ruff check .
+uv run ruff format --check .
+
+echo "Pre-commit checks passed."
