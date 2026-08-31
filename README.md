@@ -4,24 +4,31 @@ An AI-powered IT operations & incident triage copilot, built as a hands-on tour 
 
 **All data in this project is synthetic.** Tickets, runbooks, and incident history are generated locally -- no real company or personal data is used.
 
-## Start here
+## The problem
 
-- **New to this project?** Read [`docs/motivation.md`](docs/motivation.md) first -- the problem this solves and why it's built this way.
-- **Want the technical design?** [`docs/architecture.md`](docs/architecture.md) covers the full system and the reasoning behind every technology choice.
-- **Building it (human or Claude Code)?** [`CLAUDE.md`](CLAUDE.md) has the operating conventions, repo layout, and definition of done.
-- **What's being built when?** [`docs/checkpoints/`](docs/checkpoints/README.md) is the weekly roadmap and current status.
-- **Curious about the market research behind this?** [`docs/research/`](docs/research/2026-08-genai-agent-market-research.md) has the full findings this project was scoped from.
+Most GenAI agent demos stop at "the agent does the task." They skip the part that actually determines whether an organization could trust that agent with real work: can anyone say what data it touched, whether an action was approved, or why it made a particular call -- and does that trail survive an audit? That gap, not raw model capability, is the main reason enterprise agent pilots stall before reaching production, and regulation (the EU AI Act's automatic-logging requirements among them) is starting to make that trail a legal requirement rather than a nice-to-have.
 
-## What this is
+## How incident-pilot addresses it
 
-When a support ticket or an alert comes in, `incident-pilot`:
-1. Classifies it and retrieves the relevant runbook
-2. Checks whether something like this has happened before, and what's changed since
-3. Proposes a diagnosis or fix, running any diagnostic script in an isolated sandbox
-4. Waits for human approval before anything irreversible happens
-5. Logs every step -- every tool call, every memory read, every approval -- to an audit trail
+`incident-pilot` picks a genuinely common enterprise pattern -- IT ticket and incident triage -- and builds it the way a platform team focused on governance would, not the way a weekend demo would:
 
-It's not trying to be a polished product. It's a reference implementation of what an enterprise "agent platform" looks like when governance is a first-class requirement, not an afterthought -- built one weekly checkpoint at a time. See [`docs/motivation.md`](docs/motivation.md) for the full reasoning.
+- Every tool the agent uses is exposed over a real protocol (**MCP**), not a hardcoded function call, so tool access is inspectable and swappable
+- "Have we seen this before?" is answered with **temporal reasoning** over a knowledge graph, not a flat similarity lookup -- the agent can reason about what's changed since the last time, not just that something looks similar
+- Any code the agent wants to run executes in an **isolated sandbox**, never on the host
+- Nothing consequential happens without **explicit human approval**
+- Every one of those steps -- every tool call, memory read, sandbox execution, and approval -- is written to an inspectable trace and, eventually, an **immutable audit log**
+
+The governance layer isn't bolted on after the fact -- it's the reason the project exists. The ticket-triage agent is the vehicle for demonstrating that pattern properly, not the end goal in itself. This shape mirrors the reference architecture showing up across real 2026 enterprise agent deployments: a governed tool registry, a memory layer, human-in-the-loop approval gates, sandboxed execution, and a cross-cutting observability/audit plane. Full reasoning: [`docs/motivation.md`](docs/motivation.md) (the why) and [`docs/architecture.md`](docs/architecture.md) (the how).
+
+## What happens when a ticket comes in
+
+1. **Classify** -- the agent categorizes the ticket and retrieves the relevant runbook via an MCP tool call
+2. **Recall** -- it checks whether something like this has happened before, and what's changed since, using temporal memory (Graphiti)
+3. **Propose** -- it drafts a diagnosis or fix, running any diagnostic script inside an isolated sandbox (E2B)
+4. **Approve** -- a human reviews and approves the proposed action before anything is considered final
+5. **Record** -- every step above is traced end to end and logged to an audit trail
+
+Each of these five steps corresponds to one weekly build checkpoint -- see [Project status](#project-status) below.
 
 ## Architecture
 
@@ -36,11 +43,11 @@ It's not trying to be a polished product. It's a reference implementation of wha
 | Audit trail | Postgres | Immutable log of every tool call, memory access, and approval |
 | Multi-agent (stretch) | [A2A](https://a2a-protocol.org) | Router agent delegates security-flagged tickets to a specialist agent |
 
-Full rationale for each choice: [`docs/architecture.md`](docs/architecture.md).
+Full rationale for each choice, including alternatives considered: [`docs/architecture.md`](docs/architecture.md).
 
 ## Project status
 
-This is a live, ongoing project built in weekly checkpoints. See [`docs/checkpoints/`](docs/checkpoints/README.md) for the roadmap and what's done so far.
+This is a live, ongoing project built in weekly checkpoints, each adding one real layer on top of a working system from the previous week. See [`docs/checkpoints/`](docs/checkpoints/README.md) for the full roadmap, including scope previews for weeks that haven't started yet.
 
 | Week | Focus | Status |
 |---|---|---|
@@ -71,6 +78,14 @@ uv run python -m incident_pilot.run  # starts the agent
 ```
 
 *(Exact commands will be finalized as Week 1 is implemented -- this is the intended shape.)*
+
+## Further reading
+
+- [`docs/motivation.md`](docs/motivation.md) -- the full problem statement, guiding priorities, and explicit non-goals
+- [`docs/architecture.md`](docs/architecture.md) -- system design, data flow, and the rationale behind every technology choice
+- [`docs/checkpoints/`](docs/checkpoints/README.md) -- the weekly build plan and current status
+- [`docs/research/`](docs/research/2026-08-genai-agent-market-research.md) -- the market research this project was scoped from
+- [`CLAUDE.md`](CLAUDE.md) -- operating conventions for anyone (human or agent) building this
 
 ## License
 
