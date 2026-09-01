@@ -94,7 +94,7 @@ All planned work -- features, chores, bugs -- is tracked as a GitHub Issue, not 
 
 ## One-time local setup
 
-- `git config core.hooksPath scripts/git-hooks` -- enables the pre-commit checks (ground-rule guards always run; ruff/pytest once the scaffold exists).
+- `git config core.hooksPath scripts/git-hooks` -- enables the pre-commit checks: the ground-rule guards always run, plus `ruff check`/`ruff format --check` now that the scaffold exists (`pyproject.toml`). The hook does not run `pytest` -- that's CI's and `work-issue`'s self-verify step's job, not pre-commit's.
 - `gh auth login` -- required before any skill that creates/reads issues or PRs.
 
 ## Branch/commit/PR conventions
