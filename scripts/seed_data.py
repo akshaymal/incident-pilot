@@ -738,6 +738,31 @@ RUNBOOK_FILLER: list[tuple[list[str], str, str, str]] = [
         "with the user before treating as a bug.\n\nKeywords: vpn, "
         "disconnect, session timeout, remote access.",
     ),
+    (
+        ["software"],
+        "current",
+        "Recovering Unsaved Work After an Application Crash",
+        "## Symptoms\n\nAn application crashed or the OS force-closed it "
+        "before the user could save.\n\n## Steps\n\n1. Check the "
+        "application's autosave/recovery folder for a recent draft.\n2. "
+        "If no autosave exists, check for a cloud-sync cached copy from "
+        "just before the crash.\n3. If nothing recoverable is found, "
+        "advise the user and note the gap in autosave coverage for "
+        "review.\n\nKeywords: crash, unsaved work, recovery, autosave.",
+    ),
+    (
+        ["network", "security"],
+        "current",
+        "Investigating Unexpected Firewall Block Notifications",
+        "## Symptoms\n\nA user's traffic to a legitimate internal service "
+        "is being blocked by the firewall, generating an alert.\n\n"
+        "## Steps\n\n1. Check the firewall log entry for the exact rule "
+        "that triggered the block.\n2. Confirm whether the destination "
+        "service or port changed recently without a corresponding rule "
+        "update.\n3. If legitimate, file a rule-change request rather "
+        "than disabling the rule outright.\n\nKeywords: firewall, block, "
+        "alert, rule, security.",
+    ),
 ]
 
 
