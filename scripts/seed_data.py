@@ -245,6 +245,9 @@ def generate_tickets(count: int) -> list[dict]:
 
 
 def generate_runbooks(out_dir: Path, count: int) -> None:
+    if out_dir.exists():
+        for stale in out_dir.glob("*.md"):
+            stale.unlink()
     out_dir.mkdir(parents=True, exist_ok=True)
     # Guarantee at least one runbook per category first, then fill the rest
     # from the full template pool at random.
