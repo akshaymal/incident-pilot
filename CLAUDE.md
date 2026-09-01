@@ -2,6 +2,8 @@
 
 This file gives Claude Code the standing context it needs to work on `incident-pilot` without re-explaining the project each session.
 
+**Precedence.** This file is the source of truth for ground rules and conventions. Skills under `.claude/skills/` may restate a rule for their own context, but if a skill's wording and this file ever disagree, this file wins -- treat the mismatch as a bug in the skill, worth flagging, not license to pick either.
+
 **What to read, by task.** This file is always loaded; everything else is read on demand, not by default. Reason: not needed -- an already-`agent-ready` issue or a scoped bugfix already carries the context those docs would otherwise supply.
 
 | Task | Read (in order) | Skip |
@@ -22,9 +24,11 @@ An AI IT-ops/incident triage copilot, built to give the maintainer (a software e
 
 ## Ground rules
 
-1. **Real MCP tool calls, never hardcoded imports.** Runbooks and ticket data are served via custom MCP servers under `src/incident_pilot/mcp_servers/`. Code under `src/incident_pilot/agents/` must call them as MCP tools, not import the server module directly -- even though that's simpler, exposing them over MCP is the actual learning goal. Enforced mechanically by `scripts/check_mcp_boundary.py`.
+**IMPORTANT -- rules 1 and 3 are non-negotiable and CI-enforced.** A PR that violates either does not merge, heuristics permitting (see the note below the list). Everything else is a strong convention, not a hard gate.
+
+1. **IMPORTANT: Real MCP tool calls, never hardcoded imports.** Runbooks and ticket data are served via custom MCP servers under `src/incident_pilot/mcp_servers/`. Code under `src/incident_pilot/agents/` must call them as MCP tools, not import the server module directly -- even though that's simpler, exposing them over MCP is the actual learning goal. Enforced mechanically by `scripts/check_mcp_boundary.py`.
 2. **Checkpoint scope is guidance, not a hard gate.** `docs/checkpoints/week-NN-*.md` files define what each week is *for*. It's fine to start next week's work early once the current week's definition of done is fully met, or to pull a later week's item forward when it's genuinely ready. What isn't fine is scope drift that isn't visible -- see `docs/WORKFLOW.md`.
-3. **All data is synthetic and must stay that way.** Never introduce real personal, company, or scraped data. `scripts/seed_data.py` is the only source of ticket/runbook/incident data -- never invent it inline in code. Enforced (heuristically) by `scripts/check_synthetic_data.py`.
+3. **IMPORTANT: All data is synthetic and must stay that way.** Never introduce real personal, company, or scraped data. `scripts/seed_data.py` is the only source of ticket/runbook/incident data -- never invent it inline in code. Enforced (heuristically) by `scripts/check_synthetic_data.py`.
 4. **Everything must be runnable by a stranger.** No hardcoded paths, no dependency on the maintainer's personal accounts or cloud subscriptions. `docker compose up` + `uv sync` + `.env` should be the entire setup story. If a task requires a paid API (E2B, an LLM provider), document the free-tier path.
 5. **Audit-mindedness from day one.** Even in Week 1, before there's a formal audit-log table, log agent decisions (classification, tool calls, reasoning) somewhere inspectable -- this habit is the point of the whole project, not a Week 4 add-on.
 6. **When a task is ambiguous, prefer the choice that's more educational to implement**, and note the alternative briefly in a comment or the PR description.
@@ -60,17 +64,20 @@ Rules 1 and 3 are checked mechanically in CI and the pre-commit hook. See `docs/
 
 ## Commands
 
-Not yet runnable -- Week 1's repo-scaffolding task (`uv init`, `pyproject.toml`) hasn't landed. Once it has, these are the commands to use:
-
+Working today (repo scaffold has landed -- `pyproject.toml`/`uv.lock` exist):
 - `docker compose up -d` -- start Postgres/Neo4j/Langfuse
 - `uv sync` -- install dependencies
-- `uv run python scripts/seed_data.py` -- generate synthetic tickets/runbooks/incidents
-- `uv run python -m incident_pilot.run --ticket-id <id>` -- run one ticket through the agent
 - `uv run pytest` -- run tests
 - `uv run ruff check .` / `uv run ruff format --check .` -- lint / format check
 
-These run today, regardless of scaffold state:
+Pending Week 1's remaining concrete tasks (`docs/checkpoints/week-01-core-loop.md`) -- will error until then:
+- `uv run python scripts/seed_data.py` -- generate synthetic tickets/runbooks/incidents
+- `uv run python -m incident_pilot.run --ticket-id <id>` -- run one ticket through the agent
+
+These don't need `uv sync` first -- pure-stdlib guard scripts, runnable any time:
 - `python3 scripts/check_synthetic_data.py` / `python3 scripts/check_mcp_boundary.py` -- ground-rule guard scripts (Rules 1 and 3 above)
+
+**Environment setup:** copy `.env.example` to `.env`. It needs an `ANTHROPIC_API_KEY` (or uncomment the `OPENAI_API_KEY` line to use OpenAI instead) and, after `docker compose up -d`, a Langfuse project's keys (Langfuse UI -- Settings -> API Keys) for `LANGFUSE_SECRET_KEY` / `LANGFUSE_PUBLIC_KEY`.
 
 ## Workflow: issues drive the work
 
@@ -106,7 +113,13 @@ All planned work -- features, chores, bugs -- is tracked as a GitHub Issue, not 
 
 ## What NOT to do
 
-- Don't add a memory layer, sandbox, or UI before its designated week, even as a "quick win" (Ground rule 2)
-- Don't reach for a hosted/managed service where a self-hosted Docker option exists (Ground rule 4)
-- Don't invent ticket/incident data inline in code (Ground rule 3)
-- Don't collapse the MCP server layer into a plain function call "for simplicity" (Ground rule 1)
+Each of these is the specific shortcut that's tempting in the moment, not a restatement of the ground rule it violates:
+
+- Don't wire up Graphiti, E2B, or a UI early because a task "just needs a little bit of memory/sandboxing/UI to work properly" -- that's scope drift wearing a quick-win costume (Ground rule 2)
+- Don't reach for a managed service (e.g. Zep Cloud, a hosted Postgres) to skip local Docker setup, even temporarily "just to unblock this one task" (Ground rule 4)
+- Don't hardcode a "realistic-looking" example ticket/runbook into a test fixture instead of pulling from `scripts/seed_data.py`'s output, even for a quick one-off test (Ground rule 3)
+- Don't import `incident_pilot.mcp_servers` directly from a script or agent node "just for this one debugging call" -- the MCP boundary has no carve-out for one-offs (Ground rule 1)
+
+## Keeping this file current
+
+**Last reviewed:** Week 1 (2026-09-01), against the state of the repo right after scaffolding landed. If a section here describes something that's since changed (a command that now works, a rule that's been superseded), fix it in the same PR that causes the drift -- don't leave it for a future pass, and update this line when you do. Ground rules and conventions belong here; anything tied to a specific week's progress (like the Commands section above) belongs in that week's checkpoint doc first, with only a pointer here.
