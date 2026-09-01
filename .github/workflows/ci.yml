@@ -13,15 +13,15 @@ jobs:
       # Clone the PR/push commit so the steps below have something to check.
       - uses: actions/checkout@v4
 
-      # Ground rule 1 (CLAUDE.md): fails if src/incident_pilot/agents/ imports
-      # incident_pilot.mcp_servers directly instead of calling it as a real MCP
-      # tool. Pure stdlib, so it runs even before pyproject.toml exists.
+      # Ground rule 3 (CLAUDE.md): fails on hardcoded ticket/runbook/incident-shaped
+      # literals outside scripts/seed_data.py, or real-looking email/SSN patterns.
+      # Pure stdlib, so it runs even before pyproject.toml exists.
       - name: Synthetic-data guard
         run: python3 scripts/check_synthetic_data.py
 
-      # Ground rule 3 (CLAUDE.md): fails on hardcoded ticket/runbook/incident-shaped
-      # literals outside scripts/seed_data.py, or real-looking email/SSN patterns.
-      # Also pure stdlib — runs unconditionally, same as the guard above.
+      # Ground rule 1 (CLAUDE.md): fails if src/incident_pilot/agents/ imports
+      # incident_pilot.mcp_servers directly instead of calling it as a real MCP
+      # tool. Also pure stdlib — runs unconditionally, same as the guard above.
       - name: MCP-boundary check
         run: python3 scripts/check_mcp_boundary.py
 

@@ -15,7 +15,7 @@ Use this skill when asked to "work on issue #N" or equivalent.
 
    If the issue isn't open, stop and tell the user. If it does not have the `agent-ready` label, stop and tell the user to run the `issue-refiner` skill on it first — do not attempt to infer missing scope yourself.
 2. **Branch.** From an up-to-date `main`: `git checkout main && git pull && git checkout -b issue-<N>-<short-slug>`, where `<short-slug>` is a kebab-case summary of the issue title.
-3. **Implement** against the acceptance criteria in the issue body. Follow `CLAUDE.md`'s ground rules — stay inside the current week's scope unless the issue deliberately pulls forward later work (week boundaries here are guidance, not a hard gate, but silent scope drift isn't); keep all data synthetic and routed through `scripts/seed_data.py`; expose tools over MCP rather than importing them directly; log agent decisions somewhere inspectable even before the formal audit table exists; prefer the more educational implementation when a choice is ambiguous, and say so. Make focused commits, each referencing the issue: `git commit -m "<summary> (#<N>)"`.
+3. **Implement** against the acceptance criteria in the issue body. Follow `CLAUDE.md`'s Ground rules 1-6 in full — see that file for the specifics (this skill doesn't restate them; if this skill's wording of anything ever conflicts with `CLAUDE.md`, `CLAUDE.md` wins). Make focused commits, each referencing the issue: `git commit -m "<summary> (#<N>)"`.
 
    A few rules for the implementation phase:
    - **One criterion at a time.** Work through the acceptance criteria sequentially, not all at once — it keeps commits focused and makes partial progress reviewable.
@@ -33,7 +33,7 @@ Use this skill when asked to "work on issue #N" or equivalent.
    uv run pytest
    ```
 
-   The first two run regardless of whether `pyproject.toml` exists — they're pure-stdlib heuristic guards for Ground rules 1 and 2 (`CLAUDE.md`): the MCP-boundary check fails if anything under `src/incident_pilot/agents/` imports `incident_pilot.mcp_servers` directly instead of calling it as a real MCP tool; the synthetic-data guard fails on hardcoded ticket/runbook/incident-shaped literals outside `scripts/seed_data.py`, or real-looking email domains/SSN patterns anywhere. Both are heuristics, not proofs — a failure is a strong signal to look closer, not necessarily a hard violation; if it's a false positive, say so in the PR rather than silently reshaping the code to dodge the pattern.
+   The first two run regardless of whether `pyproject.toml` exists — they're pure-stdlib heuristic guards for Ground rules 1 and 3 (`CLAUDE.md`): the MCP-boundary check fails if anything under `src/incident_pilot/agents/` imports `incident_pilot.mcp_servers` directly instead of calling it as a real MCP tool; the synthetic-data guard fails on hardcoded ticket/runbook/incident-shaped literals outside `scripts/seed_data.py`, or real-looking email domains/SSN patterns anywhere. Both are heuristics, not proofs — a failure is a strong signal to look closer, not necessarily a hard violation; if it's a false positive, say so in the PR rather than silently reshaping the code to dodge the pattern.
 
    If the issue touches Docker Compose services (Langfuse, Neo4j, Postgres), also confirm `docker compose up -d` brings the stack up healthy and, if the change affects the seed data or CLI entry point, run `uv run python scripts/seed_data.py` and the relevant CLI command end-to-end once.
 
