@@ -2,15 +2,17 @@
 
 This file gives Claude Code the standing context it needs to work on `incident-pilot` without re-explaining the project each session.
 
-**What to read, by task -- this file is always loaded; the rest are read on demand, not by default:**
+**What to read, by task.** This file is always loaded; everything else is read on demand, not by default. Reason: not needed -- an already-`agent-ready` issue or a scoped bugfix already carries the context those docs would otherwise supply.
 
-- **Scoped issue work** (`work-issue` on an `agent-ready` issue): read only the current week's `docs/checkpoints/week-NN-*.md` for the acceptance-criteria context. The issue body already carries the outcome and implementation decision from `issue-refiner` -- you don't need `motivation.md`/`architecture.md` to execute against a checklist that's already been made unambiguous.
-- **Refining a rough issue, or any design/scope decision** (`issue-refiner`, choosing between implementation options, deciding whether something belongs in this project at all): read `docs/motivation.md` first, then `docs/architecture.md` -- the trade-offs in Ground rules and Tech stack below only make sense against the reasoning in those two docs.
-- **New contributor / first session on this repo, or asked to explain the project**: read `docs/motivation.md`, then `docs/architecture.md`, in that order -- this is the one case where both are worth reading up front.
-- **Pure bugfix, typo, refactor, or anything that doesn't change scope or design**: skip all of the above; this file plus the relevant source is enough.
-- `docs/checkpoints/README.md` -- read only when checking whether an issue overlaps another week's scope, or during `issue-refiner`'s scope check. Not needed for routine implementation once an issue is already `agent-ready`.
+| Task | Read (in order) | Skip |
+|---|---|---|
+| Scoped issue work (`work-issue` on an `agent-ready` issue) | current week's `docs/checkpoints/week-NN-*.md` | `motivation.md`, `architecture.md` -- the issue body already has the outcome + implementation decision |
+| Refining a rough issue / design or scope decision (`issue-refiner`, weighing implementation options) | `docs/motivation.md` -> `docs/architecture.md` | -- |
+| New contributor, or asked to explain the project | `docs/motivation.md` -> `docs/architecture.md` | -- |
+| Pure bugfix, typo, refactor -- no scope/design change | (none beyond this file + relevant source) | all of the above |
+| Checking an issue's scope against other weeks | `docs/checkpoints/README.md` | -- |
 
-When in doubt about whether a doc is needed, prefer not reading it and asking the user if something's unclear, over reading it defensively "just in case."
+When in doubt, don't read a doc defensively "just in case" -- ask the user if something's unclear instead.
 
 ## What this project is
 
