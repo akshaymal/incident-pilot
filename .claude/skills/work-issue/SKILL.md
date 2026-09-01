@@ -73,11 +73,13 @@ Use this skill when asked to "work on issue #N" or equivalent.
    **Respond to findings by severity, not uniformly:**
    - **Correctness bug** (wrong logic, missed edge case, data loss risk) or **ground-rule violation**: fix it, then re-run this step — the fix itself might introduce something new.
    - **Nit or low-confidence finding** (rename, minor null-check, stylistic): apply it in place and continue — no re-run needed for changes this small.
-7. **Docs & artifacts check.** Read `docs/checkpoints/README.md`'s scope table and, if it exists, the current week's `docs/checkpoints/week-NN-*.md` — the "Definition of done" and "Carried forward" sections in particular. For `README.md` and `docs/WORKFLOW.md` (both short), read them directly if the change touches harness, workflow, or scripts; skip otherwise.
-   - If an existing doc now describes something inaccurately, update it in this PR — don't leave known drift for a future pass.
-   - If the week's spec has a checkbox this issue completes, check it off.
-   - If the change introduces something that needs documentation but doesn't fit any existing doc's purpose (e.g. a new subsystem), write a new doc rather than overloading an unrelated one.
-   - If nothing changed that any doc describes, no action needed — don't manufacture doc edits for their own sake.
+7. **Docs & artifacts check.** Dispatch a subagent (Explore, or general-purpose if it needs to reason about scope) to do the reading and comparison, not this session — it's read-heavy investigative work with a small output, the same pattern as the review gate in step 6. Brief it with: the diff (`git diff main...HEAD`), the issue's acceptance criteria, and which docs are in play — `docs/checkpoints/README.md`'s scope table and the current week's `docs/checkpoints/week-NN-*.md` always; `README.md` and `docs/WORKFLOW.md` only if the change touches harness, workflow, or scripts. Ask it to report back, per doc: accurate / describes something now stale (quote the stale line) / has a checkbox this issue completes / silent on something the change introduces that needs documenting.
+
+   Act on what comes back in this session (it has the diff context to write the actual edit, the subagent doesn't need to):
+   - Stale line reported → update it in this PR, don't leave known drift for a future pass.
+   - Checkbox reported → check it off.
+   - Undocumented new thing reported (e.g. a new subsystem) → write a new doc rather than overloading an unrelated one.
+   - Everything reported accurate/silent → no action, don't manufacture doc edits for their own sake.
 8. **Re-check base before opening the PR.** Review rounds (steps 6-7) can themselves take long enough for `main` to move again. Run `git fetch origin main` and check `git log <branch>..origin/main`. If it's empty, the merge from step 4 still covers what's shipping — go straight to step 9. If it's non-empty, merge it in (same approach as step 4, resolve any conflicts) and re-run *only* step 5 (self-verify) against the newly-merged result — a clean merge can still combine into something that no longer passes tests, and the merged-in commits weren't covered by this issue's own review round. Push, *then* open the PR. This step should be a no-op most of the time; it only does real work when main moved again during review.
 9. **Open the PR.** Use whichever tool is available in this session:
    - **Local session** (`gh` available): `gh pr create --title "<summary> (#<N>)" --body "<body>"`
