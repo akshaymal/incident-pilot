@@ -34,8 +34,8 @@ If something in this list feels easy to add "while you're in there," don't -- no
    - [ ] `docker-compose.yml` with a Langfuse service (Postgres/Clickhouse as Langfuse requires)
 
 2. **Synthetic data generator** (`scripts/seed_data.py`)
-   - [x] Generate 30-50 synthetic tickets across 4-5 categories (network, VPN/access, hardware, software, security)
-   - [x] Generate 10-15 synthetic runbooks (markdown files), each mapped to one or more ticket categories
+   - [x] Generate 60-100 synthetic tickets across 4-5 categories (network, VPN/access, hardware, software, security), with a non-uniform category distribution and varying writer-quality text (ambiguous, multi-issue, and near-duplicate tickets included)
+   - [x] Generate 20-30 synthetic runbooks (markdown files), each mapped to one or more ticket categories, with a `status` field (`current`/`outdated`) -- at least 3 current per category, at least one multi-category runbook, at least one outdated one
    - [x] Generate 15-20 synthetic past-incident entries with timestamps (not used yet, but needed as fixtures for Week 2 -- generate now so the dataset is stable)
    - [x] Write all of the above to `data/synthetic/` (gitignored; regeneratable)
 
@@ -59,8 +59,8 @@ If something in this list feels easy to add "while you're in there," don't -- no
 
 ## Data needed
 
-- 30-50 synthetic tickets (this week's primary dataset)
-- 10-15 synthetic runbooks (this week's knowledge base)
+- 60-100 synthetic tickets (this week's primary dataset), non-uniformly distributed across categories with varying writer quality
+- 20-30 synthetic runbooks (this week's knowledge base), each flagged `current` or `outdated` and sometimes spanning multiple categories
 - 15-20 synthetic past incidents (generated now, consumed starting Week 2 -- don't wire them into the agent yet)
 
 ## Definition of done
