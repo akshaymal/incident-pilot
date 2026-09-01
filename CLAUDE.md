@@ -2,11 +2,15 @@
 
 This file gives Claude Code the standing context it needs to work on `incident-pilot` without re-explaining the project each session.
 
-**Read in this order:**
-1. `docs/motivation.md` -- why this project exists and what it's optimizing for (read this first; it changes how you should read everything else)
-2. `docs/architecture.md` -- how the system is designed and why each technology was chosen
-3. This file -- concrete conventions for implementing against that design
-4. `docs/checkpoints/README.md`, then the current week's `docs/checkpoints/week-NN-*.md` -- the exact scope for what to build right now
+**What to read, by task -- this file is always loaded; the rest are read on demand, not by default:**
+
+- **Scoped issue work** (`work-issue` on an `agent-ready` issue): read only the current week's `docs/checkpoints/week-NN-*.md` for the acceptance-criteria context. The issue body already carries the outcome and implementation decision from `issue-refiner` -- you don't need `motivation.md`/`architecture.md` to execute against a checklist that's already been made unambiguous.
+- **Refining a rough issue, or any design/scope decision** (`issue-refiner`, choosing between implementation options, deciding whether something belongs in this project at all): read `docs/motivation.md` first, then `docs/architecture.md` -- the trade-offs in Ground rules and Tech stack below only make sense against the reasoning in those two docs.
+- **New contributor / first session on this repo, or asked to explain the project**: read `docs/motivation.md`, then `docs/architecture.md`, in that order -- this is the one case where both are worth reading up front.
+- **Pure bugfix, typo, refactor, or anything that doesn't change scope or design**: skip all of the above; this file plus the relevant source is enough.
+- `docs/checkpoints/README.md` -- read only when checking whether an issue overlaps another week's scope, or during `issue-refiner`'s scope check. Not needed for routine implementation once an issue is already `agent-ready`.
+
+When in doubt about whether a doc is needed, prefer not reading it and asking the user if something's unclear, over reading it defensively "just in case."
 
 ## What this project is
 
