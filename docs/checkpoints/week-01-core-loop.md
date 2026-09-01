@@ -34,10 +34,10 @@ If something in this list feels easy to add "while you're in there," don't -- no
    - [ ] `docker-compose.yml` with a Langfuse service (Postgres/Clickhouse as Langfuse requires)
 
 2. **Synthetic data generator** (`scripts/seed_data.py`)
-   - [ ] Generate 30-50 synthetic tickets across 4-5 categories (network, VPN/access, hardware, software, security)
-   - [ ] Generate 10-15 synthetic runbooks (markdown files), each mapped to one or more ticket categories
-   - [ ] Generate 15-20 synthetic past-incident entries with timestamps (not used yet, but needed as fixtures for Week 2 -- generate now so the dataset is stable)
-   - [ ] Write all of the above to `data/synthetic/` (gitignored; regeneratable)
+   - [x] Generate 30-50 synthetic tickets across 4-5 categories (network, VPN/access, hardware, software, security)
+   - [x] Generate 10-15 synthetic runbooks (markdown files), each mapped to one or more ticket categories
+   - [x] Generate 15-20 synthetic past-incident entries with timestamps (not used yet, but needed as fixtures for Week 2 -- generate now so the dataset is stable)
+   - [x] Write all of the above to `data/synthetic/` (gitignored; regeneratable)
 
 3. **MCP servers** (`src/incident_pilot/mcp_servers/`)
    - [ ] Runbook server: exposes a tool like `search_runbooks(category, keywords)` returning matching runbook content
