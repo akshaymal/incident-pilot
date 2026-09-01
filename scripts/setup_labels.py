@@ -24,25 +24,29 @@ import requests
 
 LABELS = [
     # ── Type ──────────────────────────────────────────────────────────
-    {"name": "type: feature",     "color": "0075ca", "description": "New capability"},
-    {"name": "type: bug",         "color": "d73a4a", "description": "Something is broken"},
-    {"name": "type: chore",       "color": "e4e669", "description": "Maintenance, tooling, docs"},
+    {"name": "type: feature", "color": "0075ca", "description": "New capability"},
+    {"name": "type: bug", "color": "d73a4a", "description": "Something is broken"},
+    {"name": "type: chore", "color": "e4e669", "description": "Maintenance, tooling, docs"},
     # ── Priority ──────────────────────────────────────────────────────
-    {"name": "priority: P1",      "color": "b60205", "description": "Must-fix this sprint"},
-    {"name": "priority: P2",      "color": "e99695", "description": "Important but not urgent"},
-    {"name": "priority: P3",      "color": "fef2c0", "description": "Nice-to-have"},
+    {"name": "priority: P1", "color": "b60205", "description": "Must-fix this sprint"},
+    {"name": "priority: P2", "color": "e99695", "description": "Important but not urgent"},
+    {"name": "priority: P3", "color": "fef2c0", "description": "Nice-to-have"},
     # ── Area ──────────────────────────────────────────────────────────
-    {"name": "area: agent",       "color": "1d76db", "description": "LangGraph agent logic"},
-    {"name": "area: mcp",         "color": "5319e7", "description": "MCP tool servers"},
-    {"name": "area: memory",      "color": "0052cc", "description": "Graphiti / Neo4j memory layer"},
-    {"name": "area: sandbox",     "color": "006b75", "description": "E2B sandboxed execution"},
-    {"name": "area: observability","color": "0e8a16", "description": "Langfuse instrumentation"},
-    {"name": "area: audit",       "color": "d93f0b", "description": "Postgres audit log"},
-    {"name": "area: ui",          "color": "c5def5", "description": "Next.js / CopilotKit frontend"},
-    {"name": "area: infra",       "color": "bfd4f2", "description": "Docker Compose, CI, tooling"},
-    {"name": "area: docs",        "color": "cfd3d7", "description": "Documentation"},
+    {"name": "area: agent", "color": "1d76db", "description": "LangGraph agent logic"},
+    {"name": "area: mcp", "color": "5319e7", "description": "MCP tool servers"},
+    {"name": "area: memory", "color": "0052cc", "description": "Graphiti / Neo4j memory layer"},
+    {"name": "area: sandbox", "color": "006b75", "description": "E2B sandboxed execution"},
+    {"name": "area: observability", "color": "0e8a16", "description": "Langfuse instrumentation"},
+    {"name": "area: audit", "color": "d93f0b", "description": "Postgres audit log"},
+    {"name": "area: ui", "color": "c5def5", "description": "Next.js / CopilotKit frontend"},
+    {"name": "area: infra", "color": "bfd4f2", "description": "Docker Compose, CI, tooling"},
+    {"name": "area: docs", "color": "cfd3d7", "description": "Documentation"},
     # ── Special ───────────────────────────────────────────────────────
-    {"name": "agent-ready",       "color": "2cbe4e", "description": "Issue has unambiguous acceptance criteria; ready for agent pickup"},
+    {
+        "name": "agent-ready",
+        "color": "2cbe4e",
+        "description": "Issue has unambiguous acceptance criteria; ready for agent pickup",
+    },
 ]
 
 
@@ -53,7 +57,9 @@ def upsert_label(session: requests.Session, base_url: str, label: dict) -> str:
 
     if get_resp.status_code == 200:
         existing = get_resp.json()
-        if existing["color"] == label["color"] and existing.get("description", "") == label.get("description", ""):
+        if existing["color"] == label["color"] and existing.get("description", "") == label.get(
+            "description", ""
+        ):
             return "unchanged"
         resp = session.patch(
             f"{base_url}/labels/{requests.utils.quote(name)}",
@@ -72,9 +78,11 @@ def upsert_label(session: requests.Session, base_url: str, label: dict) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--owner", default=os.environ.get("GITHUB_OWNER", "akshaymal"))
-    parser.add_argument("--repo",  default=os.environ.get("GITHUB_REPO",  "incident-pilot"))
+    parser.add_argument("--repo", default=os.environ.get("GITHUB_REPO", "incident-pilot"))
     args = parser.parse_args()
 
     token = os.environ.get("GITHUB_TOKEN")
@@ -82,11 +90,13 @@ def main() -> None:
         sys.exit("GITHUB_TOKEN environment variable is required")
 
     session = requests.Session()
-    session.headers.update({
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-    })
+    session.headers.update(
+        {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+    )
 
     base_url = f"https://api.github.com/repos/{args.owner}/{args.repo}"
     print(f"Syncing labels → {args.owner}/{args.repo}\n")
@@ -99,7 +109,10 @@ def main() -> None:
         print(f"  [{icon}] {label['name']}")
         time.sleep(0.1)  # stay well under the GitHub API rate limit
 
-    print(f"\nDone — {counts['created']} created, {counts['updated']} updated, {counts['unchanged']} unchanged")
+    print(
+        f"\nDone — {counts['created']} created, "
+        f"{counts['updated']} updated, {counts['unchanged']} unchanged"
+    )
 
 
 if __name__ == "__main__":
